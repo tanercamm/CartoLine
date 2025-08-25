@@ -1,4 +1,4 @@
-using CartoLine.Context;
+ï»¿using CartoLine.Context;
 using CartoLine.Services.Abstract;
 using CartoLine.Services.Concrete;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +26,7 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
-        // React uygulamasýna eriþim izni
+        // React uygulamasÃ½na eriÃ¾im izni
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowReactApp",
