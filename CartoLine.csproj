@@ -11,6 +11,7 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.8" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.8" />
 		<PackageReference Include="Npgsql" Version="9.0.3" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
@@ -21,7 +22,6 @@
 		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.3" />
 	</ItemGroup>
 
-	<!-- WEB projesi ALT klasörlerdeki test dosyalarını görmesin -->
 	<ItemGroup>
 		<Compile Remove="CartoLine.UnitTests\**\*.cs" />
 		<Compile Remove="CartoLine.IntegrationTests\**\*.cs" />

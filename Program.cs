@@ -4,11 +4,6 @@ using CartoLine.Services.Concrete;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace CartoLine;
 
@@ -18,38 +13,42 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Controllers
+        // Controllers + JSON
         builder.Services.AddControllers()
-    .AddJsonOptions(o =>
-    {
-        o.JsonSerializerOptions.Converters.Add(
-            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-        );
-    });
+            .AddJsonOptions(o =>
+            {
+                o.JsonSerializerOptions.Converters.Add(
+                    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            });
 
-        // Swagger (UI)
+        // Swagger + Health
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        builder.Services.AddHealthChecks();
 
-        // React uygulamasýna eriþim izni
+        // CORS
         builder.Services.AddCors(options =>
         {
-            options.AddPolicy("AllowReactApp",
-                policyBuilder =>
-                {
-                    policyBuilder
-                        .WithOrigins("http://localhost:3000")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
-                });
+            options.AddPolicy("AllowReactApp", policy =>
+                policy.WithOrigins("http://localhost:3000")
+                      .AllowAnyHeader()
+                      .AllowAnyMethod());
         });
 
-        builder.Services.AddDbContext<AppDbContext>(options =>
-                    options.UseNpgsql(builder.Configuration.GetConnectionString("CartoLineDb"),
-                    npgsqlOptions => npgsqlOptions.UseNetTopologySuite())
-            );
+        if (builder.Environment.IsEnvironment("Testing"))
+        {
+            builder.Services.AddDbContext<AppDbContext>(opt =>
+                opt.UseInMemoryDatabase("CartoLine_TestDb"));
+        }
+        else
+        {
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseNpgsql(
+                    builder.Configuration.GetConnectionString("CartoLineDb"),
+                    npgsql => npgsql.UseNetTopologySuite()));
+        }
 
-        // Dependency Injection
+        // DI
         builder.Services.AddScoped<ILineService, LineService>();
 
         var app = builder.Build();
@@ -57,16 +56,16 @@ public class Program
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
-            app.UseSwaggerUI(); // /swagger
+            app.UseSwaggerUI();
         }
 
-        app.UseHttpsRedirection();
+        if (!app.Environment.IsEnvironment("Testing"))
+            app.UseHttpsRedirection();
 
-        // CORS aktif
         app.UseCors("AllowReactApp");
-
         app.UseAuthorization();
 
+        app.MapHealthChecks("/health");
         app.MapControllers();
 
         app.Run();
