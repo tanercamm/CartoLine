@@ -1,0 +1,14 @@
+﻿<Project>
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutput>$(MSBuildThisFileDirectory)TestResults\coverage</CoverletOutput>
+    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+
+    <Threshold>80</Threshold>
+    <ThresholdType>line</ThresholdType>
+    <ThresholdStat>total</ThresholdStat>
+
+    <Exclude>[CartoLine]*.Migrations.*</Exclude>
+    <ExcludeByFile>**\Migrations\*.cs;**\Migrations\**\*.cs;**\Dtos\Line\RuleContextDto.cs;**\Models\RuleContext.cs</ExcludeByFile>
+  </PropertyGroup>
+</Project>

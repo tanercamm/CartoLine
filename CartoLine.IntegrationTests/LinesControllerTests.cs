@@ -113,6 +113,36 @@ namespace CartoLine.IntegrationTests
             Assert.That(wrap.Data!.Count, Is.GreaterThanOrEqualTo(1));
         }
 
+        [NonParallelizable] // Bu test DB'yi temizlediği için aynı anda koşmasın
+        [Test]
+        public async Task Get_all_when_empty_returns_no_lines_message()
+        {
+            // db temizle
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                db.Lines.RemoveRange(db.Lines);
+                await db.SaveChangesAsync();
+            }
+
+            // doğrulama
+            var resp = await _client.GetAsync(Base);
+            Assert.That(resp.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+            var wrap = await resp.Content.ReadFromJsonAsync<ApiResponse<List<LineDto>>>(Json);
+            Assert.That(wrap, Is.Not.Null);
+            Assert.That(wrap!.Success, Is.True);
+            Assert.That(wrap.Data, Is.Not.Null);
+            Assert.That(wrap.Data!.Count, Is.EqualTo(0));
+
+            // mesaj
+            Assert.That(
+                string.IsNullOrWhiteSpace(wrap.Message) ||
+                wrap.Message.Contains("No lines found", StringComparison.OrdinalIgnoreCase),
+                "Message should be empty or contain 'No lines found'"
+            );
+        }
+
         [Test]
         public async Task Update_line_changes_name_and_wkt()
         {
@@ -134,7 +164,6 @@ namespace CartoLine.IntegrationTests
             });
             Assert.That(put.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
-            // (bool döndüğü için enum problemi yok ama tutarlılık için Json verelim)
             var putWrap = await put.Content.ReadFromJsonAsync<ApiResponse<bool>>(Json);
             Assert.That(putWrap, Is.Not.Null);
             Assert.That(putWrap!.Success, Is.True);
@@ -188,6 +217,103 @@ namespace CartoLine.IntegrationTests
             Assert.That(getWrap, Is.Not.Null);
             Assert.That(getWrap!.Success, Is.False); // controller: bulunamayınca Success=false
             Assert.That(getWrap.Data, Is.Null);
+        }
+
+        [Test]
+        public async Task Delete_nonexistent_id_returns_false()
+        {
+            var del = await _client.DeleteAsync($"{Base}/987654321");
+            var wrap = await del.Content.ReadFromJsonAsync<ApiResponse<object>>(Json);
+
+            Assert.That(wrap, Is.Not.Null);
+            Assert.That(wrap!.Success, Is.False);
+            Assert.That(wrap.Message, Does.Contain("not found").IgnoreCase);
+        }
+
+        // 404: ID yok
+        [Test]
+        public async Task Get_by_id_returns_success_false_for_missing_id()
+        {
+            var resp = await _client.GetAsync($"{Base}/999999");
+            Assert.That(resp.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+            var wrap = await resp.Content.ReadFromJsonAsync<ApiResponse<LineDto>>(Json);
+            Assert.That(wrap, Is.Not.Null);
+            Assert.That(wrap!.Success, Is.False);
+            Assert.That(wrap.Message, Does.Contain("not found").IgnoreCase);
+            Assert.That(wrap.Data, Is.Null);
+        }
+
+        // Update: urlID ile bodyID uyuşmazlığı
+        [Test]
+        public async Task Update_returns_error_when_id_mismatch()
+        {
+            // Seed
+            var post = await _client.PostAsJsonAsync(Base, new LineCreateDto
+            {
+                Name = "MismatchSeed",
+                LineWkt = "LINESTRING(0 0, 1 1)"
+            });
+            Assert.That(post.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+            var id = await GetLastLineIdAsync();
+
+            var put = await _client.PutAsJsonAsync($"{Base}/{id + 1}", new LineUpdateDto
+            {
+                Id = id, // bilerek uyuşmaz
+                Name = "NewName",
+                LineWkt = "LINESTRING(1 1, 2 2)"
+            });
+            Assert.That(put.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+            var wrap = await put.Content.ReadFromJsonAsync<ApiResponse<bool?>>(Json);
+            Assert.That(wrap, Is.Not.Null);
+            Assert.That(wrap!.Success, Is.False);
+            Assert.That(wrap.Data, Is.Null);
+            Assert.That(wrap.Message, Does.Contain("do not match").IgnoreCase);
+        }
+
+        [Test]
+        public async Task Update_nonexistent_id_returns_false()
+        {
+            var put = await _client.PutAsJsonAsync($"{Base}/123456",
+                new LineUpdateDto { Id = 123456, Name = "X", LineWkt = "LINESTRING(0 0, 1 1)" });
+
+            var wrap = await put.Content.ReadFromJsonAsync<ApiResponse<bool?>>(Json);
+
+            Assert.That(wrap, Is.Not.Null);
+            Assert.That(wrap!.Success, Is.False);
+            Assert.That(wrap.Message, Does.Contain("not found").IgnoreCase);
+
+            // Data null da olabilir, false da olabilir — her ikisini de kabul edelim
+            Assert.That(!wrap.Data.GetValueOrDefault(), "Data should be false or null when not found");
+        }
+
+        // Add: geçersiz WKT (dönüştürme hatası -> Success false)
+        [Test]
+        public async Task Create_with_invalid_wkt_returns_error()
+        {
+            var post = await _client.PostAsJsonAsync(Base, new LineCreateDto
+            {
+                Name = "BadWkt",
+                LineWkt = "LINESTRING(0 0, A B)" // geçersiz
+            });
+
+            Assert.That(post.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            var wrap = await post.Content.ReadFromJsonAsync<ApiResponse<bool?>>(Json);
+            Assert.That(wrap, Is.Not.Null);
+            Assert.That(wrap!.Success, Is.False);
+            Assert.That(wrap.Data, Is.Null);
+            // Mesaj controller’da farklı katmanlardan gelebilir; "error" içerdiğini kontrol etmek yeterli.
+            Assert.That(wrap.Message, Does.Contain("error").IgnoreCase);
+        }
+
+        // Health endpoint
+        [Test]
+        public async Task Health_returns_ok()
+        {
+            var r = await _client.GetAsync("/health");
+            Assert.That(r.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
     }
 }

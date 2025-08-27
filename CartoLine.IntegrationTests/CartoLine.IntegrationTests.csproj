@@ -11,7 +11,6 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.8" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
 		<PackageReference Include="NetTopologySuite" Version="2.6.0" />
-		<PackageReference Include="NetTopologySuite.IO" Version="1.14.0.1" />
 		<PackageReference Include="NUnit" Version="4.2.2" />
 		<PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.8" />
@@ -21,6 +20,10 @@
 		</PackageReference>
 	</ItemGroup>
 
+	<ItemGroup>
+		<PackageReference Include="coverlet.msbuild" Version="6.0.2" />
+	</ItemGroup>
+	
 	<ItemGroup>
 		<ProjectReference Include="..\CartoLine.csproj" />
 	</ItemGroup>

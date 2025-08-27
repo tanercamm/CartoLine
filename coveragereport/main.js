@@ -213,20 +213,20 @@ var assemblies = [
   {
     "name": "CartoLine",
     "classes": [
-      { "name": "CartoLine.Context.AppDbContext", "rp": "CartoLine_AppDbContext.html", "cl": 0, "ucl": 49, "cal": 49, "tl": 66, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "CartoLine.Controllers.LineController", "rp": "CartoLine_LineController.html", "cl": 0, "ucl": 101, "cal": 101, "tl": 142, "cb": 0, "tb": 24, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "CartoLine.Dtos.Line.LineCreateDto", "rp": "CartoLine_LineCreateDto.html", "cl": 0, "ucl": 4, "cal": 4, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "CartoLine.Dtos.Line.LineDto", "rp": "CartoLine_LineDto.html", "cl": 0, "ucl": 5, "cal": 5, "tl": 18, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "CartoLine.Dtos.Line.LineUpdateDto", "rp": "CartoLine_LineUpdateDto.html", "cl": 0, "ucl": 5, "cal": 5, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "CartoLine.Context.AppDbContext", "rp": "CartoLine_AppDbContext.html", "cl": 49, "ucl": 0, "cal": 49, "tl": 66, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "CartoLine.Controllers.LineController", "rp": "CartoLine_LineController.html", "cl": 63, "ucl": 38, "cal": 101, "tl": 142, "cb": 10, "tb": 24, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "CartoLine.Dtos.Line.LineCreateDto", "rp": "CartoLine_LineCreateDto.html", "cl": 4, "ucl": 0, "cal": 4, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "CartoLine.Dtos.Line.LineDto", "rp": "CartoLine_LineDto.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 18, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "CartoLine.Dtos.Line.LineUpdateDto", "rp": "CartoLine_LineUpdateDto.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "CartoLine.Dtos.Line.RuleContextDto", "rp": "CartoLine_RuleContextDto.html", "cl": 0, "ucl": 3, "cal": 3, "tl": 17, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "CartoLine.Migrations.AppDbContextModelSnapshot", "rp": "CartoLine_AppDbContextModelSnapshot.html", "cl": 0, "ucl": 39, "cal": 39, "tl": 62, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "CartoLine.Migrations.InitialCreate", "rp": "CartoLine_InitialCreate.html", "cl": 0, "ucl": 52, "cal": 52, "tl": 96, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "CartoLine.Migrations.InitLine", "rp": "CartoLine_InitLine.html", "cl": 0, "ucl": 74, "cal": 74, "tl": 122, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "CartoLine.Models.Line", "rp": "CartoLine_Line.html", "cl": 0, "ucl": 5, "cal": 5, "tl": 22, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "CartoLine.Models.Response", "rp": "CartoLine_Response.html", "cl": 0, "ucl": 3, "cal": 3, "tl": 11, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "CartoLine.Models.Line", "rp": "CartoLine_Line.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 22, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "CartoLine.Models.Response", "rp": "CartoLine_Response.html", "cl": 3, "ucl": 0, "cal": 3, "tl": 11, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "CartoLine.Models.RuleContext", "rp": "CartoLine_RuleContext.html", "cl": 0, "ucl": 3, "cal": 3, "tl": 9, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "CartoLine.Program", "rp": "CartoLine_Program.html", "cl": 37, "ucl": 2, "cal": 39, "tl": 74, "cb": 2, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "CartoLine.Services.Concrete.LineService", "rp": "CartoLine_LineService.html", "cl": 0, "ucl": 105, "cal": 105, "tl": 151, "cb": 0, "tb": 30, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "CartoLine.Program", "rp": "CartoLine_Program.html", "cl": 33, "ucl": 11, "cal": 44, "tl": 73, "cb": 3, "tb": 6, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "CartoLine.Services.Concrete.LineService", "rp": "CartoLine_LineService.html", "cl": 94, "ucl": 11, "cal": 105, "tl": 151, "cb": 20, "tb": 30, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
 ];
 
@@ -235,35 +235,9 @@ var metrics = [{ "name": "Crap Score", "abbreviation": "crp", "explanationUrl": 
 var historicCoverageExecutionTimes = [];
 
 var riskHotspotMetrics = [
-      { "name": "Crap Score", "explanationUrl": "https://googletesting.blogspot.de/2011/02/this-code-is-crap.html" },
-      { "name": "Cyclomatic complexity", "explanationUrl": "https://en.wikipedia.org/wiki/Cyclomatic_complexity" },
 ];
 
 var riskHotspots = [
-  {
-    "assembly": "CartoLine", "class": "CartoLine.Controllers.LineController", "reportPath": "CartoLine_LineController.html", "methodName": "UpdateLine(System.Int64,CartoLine.Dtos.Line.LineUpdateDto)", "methodShortName": "UpdateLine(...)", "fileIndex": 0, "line": 90,
-    "metrics": [
-      { "value": 110, "exceeded": true },
-      { "value": 10, "exceeded": false },
-    ]},
-  {
-    "assembly": "CartoLine", "class": "CartoLine.Services.Concrete.LineService", "reportPath": "CartoLine_LineService.html", "methodName": "UpdateLine(CartoLine.Dtos.Line.LineUpdateDto)", "methodShortName": "UpdateLine(...)", "fileIndex": 0, "line": 114,
-    "metrics": [
-      { "value": 110, "exceeded": true },
-      { "value": 10, "exceeded": false },
-    ]},
-  {
-    "assembly": "CartoLine", "class": "CartoLine.Controllers.LineController", "reportPath": "CartoLine_LineController.html", "methodName": "AddLine(CartoLine.Dtos.Line.LineCreateDto)", "methodShortName": "AddLine(...)", "fileIndex": 0, "line": 58,
-    "metrics": [
-      { "value": 72, "exceeded": true },
-      { "value": 8, "exceeded": false },
-    ]},
-  {
-    "assembly": "CartoLine", "class": "CartoLine.Services.Concrete.LineService", "reportPath": "CartoLine_LineService.html", "methodName": "GetLineById(System.Int64)", "methodShortName": "GetLineById(...)", "fileIndex": 0, "line": 65,
-    "metrics": [
-      { "value": 42, "exceeded": true },
-      { "value": 6, "exceeded": false },
-    ]},
 ];
 
 var branchCoverageAvailable = true;
