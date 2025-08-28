@@ -1,31 +1,75 @@
-﻿name: .NET Tests & Coverage
+﻿name: .NET CI
 
 on:
   push:
+    branches: [ main, develop ]
   pull_request:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    runs-on: windows-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_NOLOGO: 1
+      COVERAGE_THRESHOLD: 80  # buradan eşiği değiştirebilirsin
 
-      - uses: actions/setup-dotnet@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: 9.0.x
 
       - name: Restore
         run: dotnet restore
 
-      - name: Test with coverage (runsettings)
-        run: dotnet test --settings coverlet.runsettings --configuration Release
+      - name: Build
+        run: dotnet build -c Release --no-restore
 
-      - name: Generate coverage report (HTML)
+      # Runsettings ile XPlat collector => test fail olursa job fail (coverage düşükse fail OLMAZ uyarı verir)
+      - name: Test (with XPlat coverage)
+        run: dotnet test -c Release --no-build --settings coverlet.runsettings
+
+      # Coverage raporu + uyarılar
+      - name: Install ReportGenerator
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+      - name: Combine coverage & generate report
+        shell: pwsh
         run: |
-          dotnet tool install -g dotnet-reportgenerator-globaltool || true
-          reportgenerator -reports:"./**/TestResults/**/coverage.cobertura.xml" -targetdir:"./CoverageReport"
+          $files = Get-ChildItem -Recurse -Filter 'coverage.cobertura.xml'
+          if (-not $files) {
+            Write-Host "::warning title=Coverage not found::No coverage reports were produced. Check that coverlet collector is enabled and runsettings path is correct."
+            exit 0
+          }
+          reportgenerator `
+            -reports:"./**/TestResults/**/coverage.cobertura.xml" `
+            -targetdir:"./CoverageReport" `
+            -reporttypes:"Html;TextSummary"
+
+      - name: Warn if coverage < threshold
+        if: always()
+        shell: pwsh
+        run: |
+          $summary = Get-Content "./CoverageReport/Summary.txt" -Raw
+          $m = Select-String -InputObject $summary -Pattern 'Line coverage:\s*([0-9]+(?:\.[0-9]+)?)%' | ForEach-Object { $_.Matches[0].Groups[1].Value }
+          if (-not $m) {
+            Write-Host "::warning title=Coverage parse issue::Could not parse line coverage from Summary.txt"
+            exit 0
+          }
+          [double]$pct = $m
+          $threshold = [double]"${{ env.COVERAGE_THRESHOLD }}"
+          if ($pct -lt $threshold) {
+            Write-Host "::warning title=Coverage below threshold::Line coverage $pct% < $threshold%."
+          } else {
+            Write-Host "Coverage OK: $pct% ≥ $threshold%."
+          }
+          "line_coverage=$pct" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Upload coverage artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: CoverageReport
