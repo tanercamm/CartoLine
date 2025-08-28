@@ -6,21 +6,20 @@
 				<Configuration>
 					<Format>cobertura</Format>
 
-					<!-- Her desen AYRI SATIR, noktalı virgül YOK -->
+					<Include>[CartoLine]*</Include>
+
 					<Exclude>
 						[CartoLine]CartoLine.Migrations.*
 						[CartoLine]CartoLine.Migrations.AppDbContextModelSnapshot
-						[CartoLine]CartoLine.Program
+						[CartoLine]CartoLine.Program*
 						[CartoLine]CartoLine.Models.RuleContext
 						[CartoLine]CartoLine.Dtos.Line.RuleContextDto
 					</Exclude>
 
-					<!-- Virgülle ayır -->
-					<ExcludeByFile>**/Migrations/*.cs,**/Migrations/**/*.cs</ExcludeByFile>
+					<ExcludeByFile>**/Migrations/*.cs,**/Migrations/**/*.cs,**/Program.cs</ExcludeByFile>
 
-					<!-- İsteğe bağlı - gürültüyü azaltır -->
 					<SkipAutoProps>true</SkipAutoProps>
-					<IncludeTestAssembly>true</IncludeTestAssembly>
+					<IncludeTestAssembly>false</IncludeTestAssembly>
 				</Configuration>
 			</DataCollector>
 		</DataCollectors>
