@@ -19,11 +19,6 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="coverlet.msbuild" Version="6.0.2" />
-	</ItemGroup>
-	
 	<ItemGroup>
 		<ProjectReference Include="..\CartoLine.csproj" />
 	</ItemGroup>

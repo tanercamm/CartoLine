@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+	<DataCollectionRunSettings>
+		<DataCollectors>
+			<DataCollector friendlyName="XPlat Code Coverage">
+				<Configuration>
+					<Format>cobertura</Format>
+
+					<!-- Her desen AYRI SATIR, noktalı virgül YOK -->
+					<Exclude>
+						[CartoLine]CartoLine.Migrations.*
+						[CartoLine]CartoLine.Migrations.AppDbContextModelSnapshot
+						[CartoLine]CartoLine.Program
+						[CartoLine]CartoLine.Models.RuleContext
+						[CartoLine]CartoLine.Dtos.Line.RuleContextDto
+					</Exclude>
+
+					<!-- Virgülle ayır -->
+					<ExcludeByFile>**/Migrations/*.cs,**/Migrations/**/*.cs</ExcludeByFile>
+
+					<!-- İsteğe bağlı - gürültüyü azaltır -->
+					<SkipAutoProps>true</SkipAutoProps>
+					<IncludeTestAssembly>true</IncludeTestAssembly>
+				</Configuration>
+			</DataCollector>
+		</DataCollectors>
+	</DataCollectionRunSettings>
+</RunSettings>
