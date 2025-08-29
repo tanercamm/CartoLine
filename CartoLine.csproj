@@ -28,4 +28,8 @@
 		<EmbeddedResource Remove="CartoLine.UnitTests\**\*;CartoLine.IntegrationTests\**\*" />
 		<None Remove="CartoLine.UnitTests\**\*;CartoLine.IntegrationTests\**\*" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include=".github\workflows\frontend-tests.yml" />
+	</ItemGroup>
 </Project>
