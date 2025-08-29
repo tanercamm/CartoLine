@@ -37,8 +37,9 @@ public class Program
 
         if (builder.Environment.IsEnvironment("Testing"))
         {
+            var dbName = $"CartoLine_TestDb_{Guid.NewGuid()}";
             builder.Services.AddDbContext<AppDbContext>(opt =>
-                opt.UseInMemoryDatabase("CartoLine_TestDb"));
+                opt.UseInMemoryDatabase(dbName));
         }
         else
         {

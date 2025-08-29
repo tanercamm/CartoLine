@@ -1,5 +1,7 @@
-﻿using System.Net;
+﻿using CartoLine.Context;
+using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using System.Net;
 
 namespace CartoLine.IntegrationTests;
 
@@ -28,5 +30,14 @@ public class SmokeTests
     {
         var resp = await _client.GetAsync("/health");
         Assert.That(resp.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        resp.EnsureSuccessStatusCode();
+    }
+
+    [Test]
+    public void DbProvider_Is_InMemory()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.That(db.Database.ProviderName, Does.Contain("InMemory"));
     }
 }

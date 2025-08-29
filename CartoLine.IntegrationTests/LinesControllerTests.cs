@@ -1,25 +1,23 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
-using CartoLine.Context;
-using CartoLine.Dtos.Line;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using CartoLine.Dtos.Line;
+using CartoLine.Models;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
+using NUnit.Framework;
 
 namespace CartoLine.IntegrationTests
 {
     [TestFixture]
+    [Parallelizable(ParallelScope.None)] // güvenli tarafta kalalım
     public class LinesControllerTests
     {
         private TestingAppFactory _factory = null!;
         private HttpClient _client = null!;
         private const string Base = "/api/line";
 
-        // API'nin enum'ları string (camelCase) döndürmesiyle uyumlu JSON seçenekleri
         private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
         static LinesControllerTests()
         {
@@ -40,13 +38,6 @@ namespace CartoLine.IntegrationTests
             _factory.Dispose();
         }
 
-        private async Task<long> GetLastLineIdAsync()
-        {
-            using var scope = _factory.Services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            return await db.Lines.MaxAsync(x => x.Id);
-        }
-
         private sealed class ApiResponse<T>
         {
             public bool Success { get; set; }
@@ -54,26 +45,42 @@ namespace CartoLine.IntegrationTests
             public T? Data { get; set; }
         }
 
+        // POST gerçekten başarılı mı -> wrap.Success/Data kontrol et.
+        // Sonra GET /api/line ile id çıkar.
+        private async Task<long> CreateLineAndGetIdAsync(
+            string name = "itest-line",
+            string wkt = "LINESTRING(0 0, 1 1)")
+        {
+            var post = await _client.PostAsJsonAsync(Base, new LineCreateDto
+            {
+                Name = name,
+                LineWkt = wkt,
+                Type = LineType.Road
+            });
+            post.EnsureSuccessStatusCode();
+
+            var postWrap = await post.Content.ReadFromJsonAsync<ApiResponse<bool>>(Json);
+            Assert.That(postWrap, Is.Not.Null, "POST response parse edilemedi");
+            Assert.That(postWrap!.Success, Is.True, $"POST başarısız: {postWrap.Message}");
+            Assert.That(postWrap.Data, Is.True, "POST Data=false döndü");
+
+            var all = await _client.GetAsync(Base);
+            all.EnsureSuccessStatusCode();
+
+            var wrap = await all.Content.ReadFromJsonAsync<ApiResponse<List<LineDto>>>(Json);
+            Assert.That(wrap, Is.Not.Null);
+            Assert.That(wrap!.Success, Is.True, $"GET /api/line success=false: {wrap.Message}");
+            Assert.That(wrap.Data, Is.Not.Null);
+            Assert.That(wrap.Data!.Count, Is.GreaterThanOrEqualTo(1), "GET /api/line boş döndü");
+
+            return wrap.Data!.Max(l => l.Id);
+        }
+
         [Test]
         public async Task Create_then_get_by_id_returns_created_item()
         {
-            // POST
-            var post = await _client.PostAsJsonAsync(Base, new LineCreateDto
-            {
-                Name = "API-Create",
-                LineWkt = "LINESTRING(0 0, 1 1)"
-            });
+            var id = await CreateLineAndGetIdAsync("API-Create", "LINESTRING(0 0, 1 1)");
 
-            Assert.That(post.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-            var postWrap = await post.Content.ReadFromJsonAsync<ApiResponse<bool>>(Json);
-            Assert.That(postWrap, Is.Not.Null);
-            Assert.That(postWrap!.Success, Is.True);
-            Assert.That(postWrap.Data, Is.True);
-
-            // Id'yi InMemory DB'den al
-            var id = await GetLastLineIdAsync();
-
-            // GET /api/line/{id}
             var get = await _client.GetAsync($"{Base}/{id}");
             Assert.That(get.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
@@ -88,20 +95,7 @@ namespace CartoLine.IntegrationTests
         [Test]
         public async Task Get_all_returns_list_with_items()
         {
-            // En az bir kayıt yoksa ekle
-            using (var scope = _factory.Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                if (!await db.Lines.AnyAsync())
-                {
-                    var seed = await _client.PostAsJsonAsync(Base, new LineCreateDto
-                    {
-                        Name = "Seed-1",
-                        LineWkt = "LINESTRING(10 10, 20 20)"
-                    });
-                    Assert.That(seed.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                }
-            }
+            await CreateLineAndGetIdAsync("Seed-1", "LINESTRING(10 10, 20 20)");
 
             var resp = await _client.GetAsync(Base);
             Assert.That(resp.StatusCode, Is.EqualTo(HttpStatusCode.OK));
@@ -113,19 +107,10 @@ namespace CartoLine.IntegrationTests
             Assert.That(wrap.Data!.Count, Is.GreaterThanOrEqualTo(1));
         }
 
-        [NonParallelizable] // Bu test DB'yi temizlediği için aynı anda koşmasın
         [Test]
         public async Task Get_all_when_empty_returns_no_lines_message()
         {
-            // db temizle
-            using (var scope = _factory.Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                db.Lines.RemoveRange(db.Lines);
-                await db.SaveChangesAsync();
-            }
-
-            // doğrulama
+            // Her test izole DB ile açılıyor → boş olabilir
             var resp = await _client.GetAsync(Base);
             Assert.That(resp.StatusCode, Is.EqualTo(HttpStatusCode.OK));
 
@@ -135,26 +120,15 @@ namespace CartoLine.IntegrationTests
             Assert.That(wrap.Data, Is.Not.Null);
             Assert.That(wrap.Data!.Count, Is.EqualTo(0));
 
-            // mesaj
             Assert.That(
                 string.IsNullOrWhiteSpace(wrap.Message) ||
-                wrap.Message.Contains("No lines found", StringComparison.OrdinalIgnoreCase),
-                "Message should be empty or contain 'No lines found'"
-            );
+                wrap.Message!.Contains("No lines found", StringComparison.OrdinalIgnoreCase));
         }
 
         [Test]
         public async Task Update_line_changes_name_and_wkt()
         {
-            // seed
-            var post = await _client.PostAsJsonAsync(Base, new LineCreateDto
-            {
-                Name = "Old",
-                LineWkt = "LINESTRING(0 0, 1 1)"
-            });
-            Assert.That(post.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-
-            var id = await GetLastLineIdAsync();
+            var id = await CreateLineAndGetIdAsync("Old", "LINESTRING(0 0, 1 1)");
 
             var put = await _client.PutAsJsonAsync($"{Base}/{id}", new LineUpdateDto
             {
@@ -162,14 +136,13 @@ namespace CartoLine.IntegrationTests
                 Name = "New",
                 LineWkt = "LINESTRING(1 1, 2 2)"
             });
-            Assert.That(put.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            put.EnsureSuccessStatusCode();
 
             var putWrap = await put.Content.ReadFromJsonAsync<ApiResponse<bool>>(Json);
             Assert.That(putWrap, Is.Not.Null);
             Assert.That(putWrap!.Success, Is.True);
             Assert.That(putWrap.Data, Is.True);
 
-            // Doğrulama
             var get = await _client.GetAsync($"{Base}/{id}");
             var getWrap = await get.Content.ReadFromJsonAsync<ApiResponse<LineDto>>(Json);
             Assert.That(getWrap, Is.Not.Null);
@@ -177,16 +150,13 @@ namespace CartoLine.IntegrationTests
             Assert.That(getWrap.Data, Is.Not.Null);
             Assert.That(getWrap.Data!.Name, Is.EqualTo("New"));
 
-            // --- WKT'yi parse edip geometri üstünden kontrol et ---
             var reader = new WKTReader();
             var geom = reader.Read(getWrap.Data.LineWkt);
             var line = geom as LineString;
-            Assert.That(line, Is.Not.Null, "Geometry should be a LineString");
-
+            Assert.That(line, Is.Not.Null);
             Assert.That(line!.NumPoints, Is.EqualTo(2));
             var c0 = line.GetCoordinateN(0);
             var c1 = line.GetCoordinateN(1);
-
             Assert.That(c0.X, Is.EqualTo(1).Within(1e-9));
             Assert.That(c0.Y, Is.EqualTo(1).Within(1e-9));
             Assert.That(c1.X, Is.EqualTo(2).Within(1e-9));
@@ -196,17 +166,10 @@ namespace CartoLine.IntegrationTests
         [Test]
         public async Task Delete_then_get_returns_success_false()
         {
-            var post = await _client.PostAsJsonAsync(Base, new LineCreateDto
-            {
-                Name = "DeleteMe",
-                LineWkt = "LINESTRING(5 5, 6 6)"
-            });
-            Assert.That(post.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-
-            var id = await GetLastLineIdAsync();
+            var id = await CreateLineAndGetIdAsync("DeleteMe", "LINESTRING(5 5, 6 6)");
 
             var del = await _client.DeleteAsync($"{Base}/{id}");
-            Assert.That(del.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            del.EnsureSuccessStatusCode();
 
             var delWrap = await del.Content.ReadFromJsonAsync<ApiResponse<object>>(Json);
             Assert.That(delWrap, Is.Not.Null);
@@ -215,7 +178,7 @@ namespace CartoLine.IntegrationTests
             var get = await _client.GetAsync($"{Base}/{id}");
             var getWrap = await get.Content.ReadFromJsonAsync<ApiResponse<LineDto>>(Json);
             Assert.That(getWrap, Is.Not.Null);
-            Assert.That(getWrap!.Success, Is.False); // controller: bulunamayınca Success=false
+            Assert.That(getWrap!.Success, Is.False);
             Assert.That(getWrap.Data, Is.Null);
         }
 
@@ -230,7 +193,6 @@ namespace CartoLine.IntegrationTests
             Assert.That(wrap.Message, Does.Contain("not found").IgnoreCase);
         }
 
-        // 404: ID yok
         [Test]
         public async Task Get_by_id_returns_success_false_for_missing_id()
         {
@@ -244,19 +206,10 @@ namespace CartoLine.IntegrationTests
             Assert.That(wrap.Data, Is.Null);
         }
 
-        // Update: urlID ile bodyID uyuşmazlığı
         [Test]
         public async Task Update_returns_error_when_id_mismatch()
         {
-            // Seed
-            var post = await _client.PostAsJsonAsync(Base, new LineCreateDto
-            {
-                Name = "MismatchSeed",
-                LineWkt = "LINESTRING(0 0, 1 1)"
-            });
-            Assert.That(post.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-
-            var id = await GetLastLineIdAsync();
+            var id = await CreateLineAndGetIdAsync("MismatchSeed", "LINESTRING(0 0, 1 1)");
 
             var put = await _client.PutAsJsonAsync($"{Base}/{id + 1}", new LineUpdateDto
             {
@@ -264,7 +217,7 @@ namespace CartoLine.IntegrationTests
                 Name = "NewName",
                 LineWkt = "LINESTRING(1 1, 2 2)"
             });
-            Assert.That(put.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            put.EnsureSuccessStatusCode();
 
             var wrap = await put.Content.ReadFromJsonAsync<ApiResponse<bool?>>(Json);
             Assert.That(wrap, Is.Not.Null);
@@ -280,23 +233,20 @@ namespace CartoLine.IntegrationTests
                 new LineUpdateDto { Id = 123456, Name = "X", LineWkt = "LINESTRING(0 0, 1 1)" });
 
             var wrap = await put.Content.ReadFromJsonAsync<ApiResponse<bool?>>(Json);
-
             Assert.That(wrap, Is.Not.Null);
             Assert.That(wrap!.Success, Is.False);
             Assert.That(wrap.Message, Does.Contain("not found").IgnoreCase);
-
-            // Data null da olabilir, false da olabilir — her ikisini de kabul edelim
             Assert.That(!wrap.Data.GetValueOrDefault(), "Data should be false or null when not found");
         }
 
-        // Add: geçersiz WKT (dönüştürme hatası -> Success false)
         [Test]
         public async Task Create_with_invalid_wkt_returns_error()
         {
             var post = await _client.PostAsJsonAsync(Base, new LineCreateDto
             {
                 Name = "BadWkt",
-                LineWkt = "LINESTRING(0 0, A B)" // geçersiz
+                LineWkt = "LINESTRING(0 0, A B)",
+                Type = LineType.Road
             });
 
             Assert.That(post.StatusCode, Is.EqualTo(HttpStatusCode.OK));
@@ -304,11 +254,9 @@ namespace CartoLine.IntegrationTests
             Assert.That(wrap, Is.Not.Null);
             Assert.That(wrap!.Success, Is.False);
             Assert.That(wrap.Data, Is.Null);
-            // Mesaj controller’da farklı katmanlardan gelebilir; "error" içerdiğini kontrol etmek yeterli.
             Assert.That(wrap.Message, Does.Contain("error").IgnoreCase);
         }
 
-        // Health endpoint
         [Test]
         public async Task Health_returns_ok()
         {
