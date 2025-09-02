@@ -1,9 +1,9 @@
 ﻿name: .NET CI
+on: [push, pull_request]
 
-on:
-  push:
-    branches: [ master, main, develop ]
-  pull_request:
+concurrency:
+  group: be-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:

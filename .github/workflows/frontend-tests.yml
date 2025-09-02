@@ -1,10 +1,9 @@
 ﻿name: Frontend Tests
+on: [push, pull_request]
 
-on:
-  push:
-    branches: [ master, main, develop ]
-  pull_request:
-    branches: [ master, main, develop ]
+concurrency:
+  group: fe-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -14,6 +13,7 @@ jobs:
         working-directory: clientapp
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -21,7 +21,9 @@ jobs:
           cache-dependency-path: clientapp/package-lock.json
       - run: npm ci
       - run: npm run test:cov
-      - name: Upload coverage
+        env: { CI: true }
+      - name: Upload coverage artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage

@@ -30,7 +30,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include=".github\workflows\fe-tests.yml" />
 	  <None Include=".github\workflows\frontend-tests.yml" />
 	</ItemGroup>
 </Project>
