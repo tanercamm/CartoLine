@@ -28,7 +28,6 @@ export const RULES = [
     { value: "mustNotIntersect", label: "Kesişmemelidir" },
 ];
 
-// ---------- TYPE KANONİKLEŞTİRME (sayı/string/alias hepsi tek forma) ----------
 const NUM_TO_TYPE = ["road", "railway", "seaway", "fiber", "energy", "naturalgas", "water"] as const;
 const TYPE_ALIASES: Record<string, (typeof NUM_TO_TYPE)[number]> = {
     dogalgaz: "naturalgas",
@@ -149,6 +148,18 @@ function validateRule(
     }
 }
 
+// ---- API'den gelen listeyi tek yerde map'leyen yardımcı ----
+function mapApiList(data: any): { id: string; type: string; wkt: string }[] {
+    const list = (data?.data ?? []) as Array<{ id: number; lineWkt: string; type: number | string }>;
+    return list
+        .filter((x) => !!x.lineWkt)
+        .map((x) => ({
+            id: String(x.id),
+            type: String(canonType(x.type)),
+            wkt: x.lineWkt,
+        }));
+}
+
 export default function App() {
     const [preOpen, setPreOpen] = useState(false);
     const [postOpen, setPostOpen] = useState(false);
@@ -163,26 +174,16 @@ export default function App() {
     const [pendingWkt, setPendingWkt] = useState<string | null>(null);
     const [name, setName] = useState<string>("");
 
-    // tüm çizgileri front-end’de tutuyoruz (tip + wkt)
     const [allLines, setAllLines] = useState<{ id: string; type: string; wkt: string }[]>([]);
 
-    // CRA proxy kullanıldığı için relative baseURL
     const api = useMemo(() => axios.create({ baseURL: "/api" }), []);
 
-    // -------- Açılışta mevcut çizgileri çek ve normalize et --------
+    // -------- Açılışta mevcut çizgileri çek --------
     useEffect(() => {
         (async () => {
             try {
                 const r = await api.get("/line");
-                const list = (r.data?.data ?? []) as Array<{ id: number; lineWkt: string; type: number | string }>;
-                const mapped = list
-                    .filter((x) => !!x.lineWkt)
-                    .map((x) => ({
-                        id: String(x.id),
-                        type: String(canonType(x.type)),  // <<< normalize
-                        wkt: x.lineWkt,
-                    }));
-                setAllLines(mapped);
+                setAllLines(mapApiList(r.data));
             } catch {
                 toast.error("Çizgiler yüklenemedi.");
             }
@@ -224,14 +225,37 @@ export default function App() {
     const save = async () => {
         if (!pendingWkt) return;
         try {
-            await api.post("/line", {
+            // 1) Kaydet
+            const payload = {
                 name: name || `Line ${new Date().toLocaleString()}`,
                 lineWkt: pendingWkt,
-                type: canonType(typeA), // <<< normalize
+                type: canonType(typeA),
                 ruleContext: { typeA, typeB, rule },
-            });
+            };
+            const r = await api.post("/line", payload);
 
-            setAllLines((prev) => [...prev, { id: crypto.randomUUID(), type: String(canonType(typeA)), wkt: pendingWkt }]);
+            // 2) Önce POST yanıtında "created item" var mı dene
+            const created = r?.data?.data as
+                | { id?: number | string; lineWkt?: string; type?: number | string }
+                | undefined;
+
+            if (created?.id && created?.lineWkt) {
+                // Doğrudan ekle (kanonik type ile)
+                setAllLines((prev) => [
+                    ...prev,
+                    {
+                        id: String(created.id),
+                        type: String(canonType(created.type ?? typeA)),
+                        wkt: String(created.lineWkt),
+                    },
+                ]);
+            } else {
+                // 3) Değilse güvenli fallback: listeyi yeniden çek
+                const r2 = await api.get("/line");
+                setAllLines(mapApiList(r2.data));
+            }
+
+            // 4) UI temizliği
             setPostOpen(false);
             setPendingWkt(null);
             toast.success("Çizgi kaydedildi.");
