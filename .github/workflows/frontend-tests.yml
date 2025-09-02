@@ -2,11 +2,9 @@
 
 on:
   push:
-    paths:
-      - "clientapp/**"
+    branches: [ master, main, develop ]
   pull_request:
-    paths:
-      - "clientapp/**"
+    branches: [ master, main, develop ]
 
 jobs:
   test:
