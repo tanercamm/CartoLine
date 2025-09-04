@@ -1,7 +1,5 @@
-﻿// src/test/mockOpenLayers.ts
-import { vi } from "vitest";
+﻿import { vi } from "vitest";
 
-/* ========== Base Layer ========== */
 class BaseLayer {
     setZIndex = vi.fn();
     setVisible = vi.fn();
@@ -9,7 +7,6 @@ class BaseLayer {
     changed = vi.fn();
 }
 
-/* ========== Feature & Geometries (sade stub) ========== */
 class Feature {
     _props: Record<string, any>;
     _geom: any;
@@ -32,7 +29,6 @@ class MultiPolygon {
     constructor(public coords: any) { }
 }
 
-/* ========== Sources ========== */
 class VectorSource {
     _features: any[];
     constructor(opts?: any) {
@@ -50,7 +46,6 @@ class XYZ {
     constructor(_opts?: any) { }
 }
 
-/* ========== Layers ========== */
 class VectorLayer extends BaseLayer {
     _source: any;
     _style: any;
@@ -73,7 +68,6 @@ class TileLayer extends BaseLayer {
     getSource = vi.fn(() => this._source);
 }
 
-/* ========== Overlay ========== */
 class Overlay {
     _element: any;
     _position: any;
@@ -89,7 +83,6 @@ class Overlay {
     setOffset = vi.fn((o: any) => (this._offset = o));
 }
 
-/* ========== Map & View ========== */
 class Map {
     _target: any;
     _view: any;
@@ -110,7 +103,6 @@ class Map {
     setTarget = vi.fn((t?: any) => (this._target = t));
     getTarget = vi.fn(() => this._target);
 
-    // *** Asıl eksik olanlar:
     getTargetElement = vi.fn(() => {
         if (!this._target) return null;
         return typeof this._target === "string"
@@ -118,7 +110,6 @@ class Map {
             : (this._target as HTMLElement);
     });
 
-    // Bazı kodlar getViewport() kullanıyorsa dert çıkmasın
     getViewport = vi.fn(() => {
         const el = this.getTargetElement();
         return el ?? document.createElement("div");
@@ -158,7 +149,6 @@ class View {
     getZoom = vi.fn(() => this._zoom);
 }
 
-/* ========== Style Stubs ========== */
 class Style { constructor(_opts?: any) { } }
 class Fill { constructor(_opts?: any) { } }
 class Stroke { constructor(_opts?: any) { } }
@@ -166,12 +156,10 @@ class Icon { constructor(_opts?: any) { } }
 class Text { constructor(_opts?: any) { } }
 class Circle { constructor(_opts?: any) { } }
 
-/* ========== Format ========== */
 class GeoJSON {
     readFeatures = vi.fn((_g: any, _opts?: any) => []); // testlerde gerçek parse gerekmiyor
 }
 
-/* ========== Proj & Extent helpers ========== */
 vi.mock("ol/proj", () => {
     const fromLonLat = vi.fn((c: any) => c);
     const transformExtent = vi.fn((e: any) => e);
@@ -187,7 +175,6 @@ vi.mock("ol/extent", () => ({
     buffer: vi.fn((extent: any, _value: number) => extent),
 }));
 
-/* ========== Export mocks with original import paths ========== */
 vi.mock("ol/Map", () => ({ default: Map }));
 vi.mock("ol/View", () => ({ default: View }));
 vi.mock("ol/Overlay", () => ({ default: Overlay }));

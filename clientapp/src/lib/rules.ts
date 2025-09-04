@@ -1,5 +1,4 @@
-﻿// clientapp/src/lib/rules.ts
-export const NUM_TO_TYPE = ["road", "railway", "seaway", "fiber", "energy", "naturalgas", "water"] as const;
+﻿export const NUM_TO_TYPE = ["road", "railway", "seaway", "fiber", "energy", "naturalgas", "water"] as const;
 
 const TYPE_ALIASES: Record<string, (typeof NUM_TO_TYPE)[number]> = {
     dogalgaz: "naturalgas", naturalgaz: "naturalgas", naturalgas: "naturalgas",

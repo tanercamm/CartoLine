@@ -1,5 +1,4 @@
-﻿// RuleModal.tsx
-import React, { useEffect } from "react";
+﻿import React, { useEffect } from "react";
 
 type Props = {
     open: boolean;

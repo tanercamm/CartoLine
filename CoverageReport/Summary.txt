@@ -1,0 +1,25 @@
+Summary
+  Generated on: 04-Sep-25 - 2:02:17 PM
+  Coverage date: 28-Aug-25 - 1:58:29 PM - 04-Sep-25 - 2:00:27 PM
+  Parser: MultiReport (8x Cobertura)
+  Assemblies: 1
+  Classes: 3
+  Files: 3
+  Line coverage: 80.6%
+  Covered lines: 204
+  Uncovered lines: 49
+  Coverable lines: 253
+  Total lines: 359
+  Branch coverage: 61.1% (33 of 54)
+  Covered branches: 33
+  Total branches: 54
+  Method coverage: 100% (28 of 28)
+  Full method coverage: 50% (14 of 28)
+  Covered methods: 28
+  Fully covered methods: 14
+  Total methods: 28
+
+CartoLine                                   80.6%
+  CartoLine.Context.AppDbContext             100%
+  CartoLine.Controllers.LineController      62.3%
+  CartoLine.Services.Concrete.LineService   89.4%
